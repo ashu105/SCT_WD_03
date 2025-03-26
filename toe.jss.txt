@@ -1,0 +1,80 @@
+const board = document.getElementById("board");
+const cells = document.querySelectorAll(".cell");
+const statusText = document.getElementById("status");
+const resetButton = document.getElementById("reset");
+
+let boardState = ["", "", "", "", "", "", "", "", ""];
+let currentPlayer = "X";
+let gameActive = true;
+
+const winningCombinations = [
+    [0, 1, 2], [3, 4, 5], [6, 7, 8],
+    [0, 3, 6], [1, 4, 7], [2, 5, 8],
+    [0, 4, 8], [2, 4, 6]
+];
+
+function checkWinner() {
+    for (const combination of winningCombinations) {
+        const [a, b, c] = combination;
+        if (boardState[a] && boardState[a] === boardState[b] && boardState[a] === boardState[c]) {
+            gameActive = false;
+            statusText.textContent = `${boardState[a]} Wins! 🎉`;
+            return;
+        }
+    }
+
+    if (!boardState.includes("")) {
+        gameActive = false;
+        statusText.textContent = "It's a Draw! 😐";
+    }
+}
+
+function handleCellClick(event) {
+    const index = event.target.getAttribute("data-index");
+
+    if (boardState[index] !== "" || !gameActive) return;
+
+    boardState[index] = currentPlayer;
+    event.target.textContent = currentPlayer;
+    event.target.classList.add("taken");
+
+    checkWinner();
+
+    if (gameActive) {
+        currentPlayer = "O";
+        statusText.textContent = "Computer's Turn...";
+        setTimeout(computerMove, 500);
+    }
+}
+
+function computerMove() {
+    if (!gameActive) return;
+
+    let emptyCells = boardState.map((cell, i) => (cell === "" ? i : null)).filter(i => i !== null);
+
+    if (emptyCells.length > 0) {
+        let randomIndex = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        boardState[randomIndex] = "O";
+        cells[randomIndex].textContent = "O";
+        cells[randomIndex].classList.add("taken");
+        checkWinner();
+        if (gameActive) {
+            currentPlayer = "X";
+            statusText.textContent = "Your Turn!";
+        }
+    }
+}
+
+function resetGame() {
+    boardState = ["", "", "", "", "", "", "", "", ""];
+    gameActive = true;
+    currentPlayer = "X";
+    statusText.textContent = "Your turn!";
+    cells.forEach(cell => {
+        cell.textContent = "";
+        cell.classList.remove("taken");
+    });
+}
+
+cells.forEach(cell => cell.addEventListener("click", handleCellClick));
+resetButton.addEventListener("click", resetGame);
